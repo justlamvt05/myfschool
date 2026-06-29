@@ -11,9 +11,13 @@ public class ClassGradeResponse {
 
     private Long studentId;
 
+    private Long gradeId;
+
     private String studentName;
 
     private String studentCode;
+
+    private Long subjectId;
 
     private String subjectName;
 

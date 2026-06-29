@@ -8,20 +8,43 @@ import com.lamthoncoding.myfschoolse1913be.exception.handlers.InvalidInputExcept
 import com.lamthoncoding.myfschoolse1913be.exception.handlers.UnauthorizedException;
 import com.lamthoncoding.myfschoolse1913be.payload.response.ApiCode;
 import com.lamthoncoding.myfschoolse1913be.payload.response.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleException( Exception ex, HttpServletRequest request) {
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", 500);
+        body.put("code", "E500");
+        body.put("error", "Internal Server Error");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getServletPath());
+        body.put("timestamp", LocalDateTime.now());
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
+    }
+
 
     @ExceptionHandler(EntityNotFound.class)
     public ResponseEntity<ApiResponse<?>> handleEntityNotFound(EntityNotFound e) {

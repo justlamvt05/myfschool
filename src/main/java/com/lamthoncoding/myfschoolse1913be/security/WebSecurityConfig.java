@@ -86,7 +86,7 @@ public class WebSecurityConfig {
                 "http://localhost:5000",
                 "http://localhost:26033",
                 "http://localhost:36894",
-                "http://localhost:6321"));
+                "http://localhost:19896"));
         config.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         );

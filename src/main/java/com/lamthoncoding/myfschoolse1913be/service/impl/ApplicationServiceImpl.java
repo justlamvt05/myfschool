@@ -95,7 +95,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         // Ưu tiên kiểm tra Student trước, nếu không thì Teacher
         Optional<Student> studentOpt = studentRepository.findByUserId(currentUserId);
         if (studentOpt.isPresent()) {
-            return applicationRepository.findByStudentId(studentOpt.get().getId())
+            return applicationRepository.findByStudentIdOrderByCreatedAtDesc(studentOpt.get().getId())
                     .stream()
                     .map(this::toResponse)
                     .toList();
@@ -104,7 +104,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Teacher teacher = teacherRepository.findByUserId(currentUserId)
                 .orElseThrow(() -> new EntityNotFound("User information not found"));
 
-        return applicationRepository.findByTeacherId(teacher.getId())
+        return applicationRepository.findByTeacherIdOrderByCreatedAtDesc(teacher.getId())
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -139,17 +139,20 @@ public class ApplicationServiceImpl implements ApplicationService {
         log.info("Admin fetching all applications, filter: status={}, type={}", status, type);
 
         List<Application> applications;
+
         if (status != null && type != null) {
-            applications = applicationRepository.findByStatusAndType(status, type);
+            applications = applicationRepository.findByStatusAndTypeOrderByCreatedAtDesc(status, type);
         } else if (status != null) {
-            applications = applicationRepository.findByStatus(status);
+            applications = applicationRepository.findByStatusOrderByCreatedAtDesc(status);
         } else if (type != null) {
-            applications = applicationRepository.findByType(type);
+            applications = applicationRepository.findByTypeOrderByCreatedAtDesc(type);
         } else {
-            applications = applicationRepository.findAll();
+            applications = applicationRepository.findAllByOrderByCreatedAtDesc();
         }
 
-        return applications.stream().map(this::toResponse).toList();
+        return applications.stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override

@@ -7,10 +7,12 @@ import com.lamthoncoding.myfschoolse1913be.security.service.UserDetailsImpl;
 import com.lamthoncoding.myfschoolse1913be.service.TeacherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/teacher")
@@ -72,6 +74,35 @@ public class TeacherController {
         return ApiResponse.success(
                 teacherService.getHomeroomClassGradesBySemester(
                         userDetails.getUserId(), semesterId));
+    }
+
+    // ==================== LỚP GIẢNG DẠY ====================
+
+    /**
+     * GET /teacher/classes
+     * Lấy danh sách các lớp mà giáo viên giảng dạy.
+     */
+    @GetMapping("/classes")
+    public ApiResponse<?> getTeachingClasses(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        return ApiResponse.success(
+                teacherService.getTeachingClasses(userDetails.getUserId()));
+    }
+
+    /**
+     * GET /teacher/classes/{classId}/students?semesterId={semesterId}
+     * Lấy danh sách học sinh của một lớp kèm theo điểm của môn giáo viên dạy trong học kỳ.
+     */
+    @GetMapping("/classes/{classId}/students")
+    public ApiResponse<?> getStudentsGradesByClassAndSemester(
+            @PathVariable Long classId,
+            @RequestParam Long semesterId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        return ApiResponse.success(
+                teacherService.getStudentsGradesByClassAndSemester(
+                        userDetails.getUserId(), classId, semesterId));
     }
 
     // ==================== ĐƠN ====================
@@ -154,5 +185,35 @@ public class TeacherController {
 
         return ApiResponse.success(
                 teacherService.updateGrade(id, request, userDetails.getUserId()));
+    }
+
+    // ==================== ĐIỂM DANH ====================
+
+    /**
+     * GET /teacher/attendances/classes/{classId}
+     * Lấy danh sách học sinh của lớp để điểm danh (kèm trạng thái đã điểm danh nếu có)
+     */
+    @GetMapping("/attendances/classes/{classId}")
+    public ApiResponse<?> getStudentsForAttendance(
+            @PathVariable Long classId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam Integer period,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        return ApiResponse.success(
+                teacherService.getStudentsForAttendance(userDetails.getUserId(), classId, date, period));
+    }
+
+    /**
+     * POST /teacher/attendances
+     * Gửi danh sách điểm danh
+     */
+    @PostMapping("/attendances")
+    public ApiResponse<?> takeAttendance(
+            @Valid @RequestBody com.lamthoncoding.myfschoolse1913be.payload.request.TeacherTakeAttendanceRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        teacherService.takeAttendance(userDetails.getUserId(), request);
+        return ApiResponse.success("Attendance saved successfully");
     }
 }

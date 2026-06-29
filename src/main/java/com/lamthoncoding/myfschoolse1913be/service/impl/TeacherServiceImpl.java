@@ -8,9 +8,11 @@ import com.lamthoncoding.myfschoolse1913be.exception.handlers.EntityNotFound;
 import com.lamthoncoding.myfschoolse1913be.exception.handlers.InvalidInputException;
 import com.lamthoncoding.myfschoolse1913be.payload.request.TeacherApplicationRequest;
 import com.lamthoncoding.myfschoolse1913be.payload.request.TeacherGradeRequest;
+import com.lamthoncoding.myfschoolse1913be.payload.request.TeacherTakeAttendanceRequest;
 import com.lamthoncoding.myfschoolse1913be.payload.response.*;
 import com.lamthoncoding.myfschoolse1913be.repository.*;
 import com.lamthoncoding.myfschoolse1913be.service.TeacherService;
+import com.lamthoncoding.myfschoolse1913be.contraints.AttendanceStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,12 +36,14 @@ public class TeacherServiceImpl implements TeacherService {
     private final EventRepository eventRepository;
     private final StudentRepository studentRepository;
     private final SemesterRepository semesterRepository;
+    private final AttendanceRepository attendanceRepository;
+    private final ClassRoomRepository classRoomRepository;
 
     // ==================== HELPER ====================
 
     private Teacher getTeacherByUserId(Long userId) {
         return teacherRepository.findByUserId(userId)
-                .orElseThrow(() -> new EntityNotFound("Không tìm thấy thông tin giáo viên"));
+                .orElseThrow(() -> new EntityNotFound("Teacher information not found"));
     }
 
     // ==================== LỊCH DẠY ====================
@@ -74,7 +78,7 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher teacher = getTeacherByUserId(currentUserId);
 
         if (teacher.getHomeroomClass() == null) {
-            throw new AccessDeniedException("Bạn không phải giáo viên chủ nhiệm của lớp nào");
+            throw new AccessDeniedException("You are not the homeroom teacher of any class");
         }
 
         return gradeRepository.findByStudentClassRoomId(teacher.getHomeroomClass().getId())
@@ -89,17 +93,78 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher teacher = getTeacherByUserId(currentUserId);
 
         if (teacher.getHomeroomClass() == null) {
-            throw new AccessDeniedException("Bạn không phải giáo viên chủ nhiệm của lớp nào");
+            throw new AccessDeniedException("You are not the homeroom teacher of any class");
         }
 
         semesterRepository.findById(semesterId)
-                .orElseThrow(() -> new EntityNotFound("Không tìm thấy học kỳ"));
+                .orElseThrow(() -> new EntityNotFound("Semester not found"));
 
         return gradeRepository.findByStudentClassRoomIdAndSemesterId(
                         teacher.getHomeroomClass().getId(), semesterId)
                 .stream()
                 .map(this::toClassGradeResponse)
                 .toList();
+    }
+
+    // ==================== LỚP GIẢNG DẠY ====================
+
+    @Override
+    public List<ClassRoomResponse> getTeachingClasses(Long currentUserId) {
+        log.info("Teacher userId={} fetching teaching classes", currentUserId);
+        Teacher teacher = getTeacherByUserId(currentUserId);
+
+        return scheduleRepository.findByTeacherId(teacher.getId())
+                .stream()
+                .map(Schedule::getClassRoom)
+                .distinct()
+                .map(cr -> ClassRoomResponse.builder()
+                        .id(cr.getId())
+                        .name(cr.getClassName())
+                        .schoolYear(cr.getSchoolYear())
+                        .build())
+                .toList();
+    }
+
+    @Override
+    public List<ClassGradeResponse> getStudentsGradesByClassAndSemester(Long currentUserId, Long classId, Long semesterId) {
+        log.info("Teacher userId={} fetching students grades for classId={}, semesterId={}", currentUserId, classId, semesterId);
+        Teacher teacher = getTeacherByUserId(currentUserId);
+
+        // Verify if teacher actually teaches this class
+        boolean teachesClass = scheduleRepository.findByTeacherId(teacher.getId())
+                .stream()
+                .anyMatch(s -> s.getClassRoom().getId().equals(classId));
+        if (!teachesClass) {
+            throw new AccessDeniedException("You are not assigned to teach this class");
+        }
+
+        Semester semester = semesterRepository.findById(semesterId)
+                .orElseThrow(() -> new EntityNotFound("Semester not found"));
+
+        List<Student> students = studentRepository.findByClassRoomId(classId);
+
+        return students.stream().map(student -> {
+            ClassGradeResponse response = ClassGradeResponse.builder()
+                    .studentId(student.getId())
+                    .studentName(student.getUser().getFullName())
+                    .studentCode(student.getStudentCode())
+                    .subjectId(teacher.getSubject().getId())
+                    .subjectName(teacher.getSubject().getSubjectName())
+                    .semesterName(semester.getSemesterName())
+                    .build();
+
+            gradeRepository.findByStudentIdAndSubjectIdAndSemesterId(student.getId(), teacher.getSubject().getId(), semesterId)
+                    .ifPresent(grade -> {
+                        response.setGradeId(grade.getId());
+                        response.setOralScore(grade.getOralScore());
+                        response.setScore15Min(grade.getScore15Min());
+                        response.setScore1Period(grade.getScore1Period());
+                        response.setFinalExam(grade.getFinalExam());
+                        response.setAverageScore(grade.getAverageScore());
+                    });
+
+            return response;
+        }).toList();
     }
 
     // ==================== ĐƠN ====================
@@ -111,11 +176,11 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher teacher = getTeacherByUserId(currentUserId);
 
         if (request.getFromDate().isBefore(ChronoLocalDate.from(LocalDate.now().atStartOfDay()))) {
-            throw new InvalidInputException("Ngày bắt đầu không thể trước hôm nay");
+            throw new InvalidInputException("The start date cannot be earlier than today");
         }
 
         if (request.getFromDate().isAfter(request.getToDate())) {
-            throw new InvalidInputException("Ngày bắt đầu không thể sau ngày kết thúc");
+            throw  new InvalidInputException("The start date cannot be later than the end date");
         }
 
         Application application = Application.builder()
@@ -151,7 +216,7 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher teacher = getTeacherByUserId(currentUserId);
 
         Application application = applicationRepository.findByIdAndTeacherId(id, teacher.getId())
-                .orElseThrow(() -> new AccessDeniedException("Bạn không có quyền xem đơn này"));
+                .orElseThrow(() -> new AccessDeniedException("You are not authorized to view this application"));
 
         return toApplicationResponse(application);
     }
@@ -181,11 +246,11 @@ public class TeacherServiceImpl implements TeacherService {
 
         // Kiểm tra học sinh tồn tại
         Student student = studentRepository.findById(request.getStudentId())
-                .orElseThrow(() -> new EntityNotFound("Không tìm thấy học sinh"));
+                .orElseThrow(() -> new EntityNotFound("Student not found"));
 
         // Kiểm tra học kỳ tồn tại
         Semester semester = semesterRepository.findById(request.getSemesterId())
-                .orElseThrow(() -> new EntityNotFound("Không tìm thấy học kỳ"));
+                .orElseThrow(() -> new EntityNotFound("Semester not found"));
 
         // Kiểm tra GV có dạy môn này cho lớp của HS không
         List<Schedule> teacherSchedules = scheduleRepository
@@ -196,15 +261,14 @@ public class TeacherServiceImpl implements TeacherService {
 
         if (teacherSchedules.isEmpty()) {
             throw new AccessDeniedException(
-                    "Bạn không dạy môn này cho lớp của học sinh này");
+                    "You are not assigned to teach this subject for this student's class");
         }
 
         // Kiểm tra đã có điểm chưa
         gradeRepository.findByStudentIdAndSubjectIdAndSemesterId(
                 request.getStudentId(), request.getSubjectId(), request.getSemesterId()
         ).ifPresent(g -> {
-            throw new InvalidInputException(
-                    "Điểm đã tồn tại. Vui lòng sử dụng chức năng cập nhật điểm");
+            throw new InvalidInputException("A grade already exists. Please use the update grade function instead");
         });
 
         Subject subject = teacherSchedules.get(0).getSubject();
@@ -239,7 +303,7 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher teacher = getTeacherByUserId(currentUserId);
 
         Grade grade = gradeRepository.findById(gradeId)
-                .orElseThrow(() -> new EntityNotFound("Không tìm thấy bản ghi điểm"));
+                .orElseThrow(() -> new EntityNotFound("Grade record not found"));
 
         // Kiểm tra GV có dạy môn này cho lớp của HS không
         List<Schedule> teacherSchedules = scheduleRepository
@@ -250,7 +314,7 @@ public class TeacherServiceImpl implements TeacherService {
 
         if (teacherSchedules.isEmpty()) {
             throw new AccessDeniedException(
-                    "Bạn không có quyền cập nhật điểm môn này");
+                    "User is unauthorized");
         }
 
         // Cập nhật điểm
@@ -268,6 +332,118 @@ public class TeacherServiceImpl implements TeacherService {
         log.info("Grade id={} updated", gradeId);
 
         return toGradeResponse(saved);
+    }
+
+    // ==================== ĐIỂM DANH ====================
+
+    private void validateTeacherScheduleForAttendance(Teacher teacher, Long classId, LocalDate date, Integer period) {
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+
+        // Kiểm tra xem giáo viên có lịch dạy lớp này vào thứ này không
+        List<Schedule> schedules = scheduleRepository.findByTeacherIdAndClassRoomIdAndDayOfWeek(
+                teacher.getId(), classId, dayOfWeek);
+
+        if (schedules.isEmpty()) {
+            throw new AccessDeniedException("You are not assigned to teach this class on " + dayOfWeek);
+        }
+
+        // Kiểm tra xem tiết học có nằm trong lịch dạy không
+        boolean validPeriod = schedules.stream()
+                .anyMatch(s -> s.getPeriodStart() <= period && s.getPeriodEnd() >= period);
+
+        if (!validPeriod) {
+            throw new AccessDeniedException("You are not assigned to teach this class at period " + period);
+        }
+    }
+
+    @Override
+    public List<TeacherStudentAttendanceResponse> getStudentsForAttendance(Long currentUserId, Long classId, LocalDate date, Integer period) {
+        log.info("Teacher userId={} getting students for attendance classId={}, date={}, period={}", currentUserId, classId, date, period);
+        Teacher teacher = getTeacherByUserId(currentUserId);
+
+        classRoomRepository.findById(classId)
+                .orElseThrow(() -> new EntityNotFound("Class not found"));
+
+        validateTeacherScheduleForAttendance(teacher, classId, date, period);
+
+        List<Student> students = studentRepository.findByClassRoomId(classId);
+
+        List<Attendance> existingAttendances = attendanceRepository.findByClassRoomIdAndAttendanceDateAndPeriod(
+                classId, date, period);
+
+        return students.stream().map(student -> {
+            TeacherStudentAttendanceResponse response = TeacherStudentAttendanceResponse.builder()
+                    .studentId(student.getId())
+                    .studentName(student.getUser().getFullName())
+                    .studentCode(student.getStudentCode())
+                    .build();
+
+            existingAttendances.stream()
+                    .filter(a -> a.getStudent().getId().equals(student.getId()))
+                    .findFirst()
+                    .ifPresent(a -> {
+                        response.setStatus(a.getStatus().name());
+                        response.setNote(a.getNote());
+                    });
+
+            return response;
+        }).toList();
+    }
+
+    @Override
+    @Transactional
+    public void takeAttendance(Long currentUserId, TeacherTakeAttendanceRequest request) {
+        log.info("Teacher userId={} taking attendance for classId={}, date={}, period={}",
+                currentUserId, request.getClassRoomId(), request.getAttendanceDate(), request.getPeriod());
+
+        Teacher teacher = getTeacherByUserId(currentUserId);
+        
+        ClassRoom classRoom = classRoomRepository.findById(request.getClassRoomId())
+                .orElseThrow(() -> new EntityNotFound("Class not found"));
+
+        validateTeacherScheduleForAttendance(teacher, classRoom.getId(), request.getAttendanceDate(), request.getPeriod());
+
+        List<Attendance> existingAttendances = attendanceRepository.findByClassRoomIdAndAttendanceDateAndPeriod(
+                classRoom.getId(), request.getAttendanceDate(), request.getPeriod());
+
+        for (TeacherTakeAttendanceRequest.StudentAttendanceRequest attRequest : request.getAttendances()) {
+            Student student = studentRepository.findById(attRequest.getStudentId())
+                    .orElseThrow(() -> new EntityNotFound("Student not found: " + attRequest.getStudentId()));
+
+            if (!student.getClassRoom().getId().equals(classRoom.getId())) {
+                throw new InvalidInputException("Student " + student.getId() + " is not in class " + classRoom.getId());
+            }
+
+            AttendanceStatus status;
+            try {
+                status = AttendanceStatus.valueOf(attRequest.getStatus());
+            } catch (IllegalArgumentException e) {
+                throw new InvalidInputException("Invalid attendance status: " + attRequest.getStatus());
+            }
+
+            Attendance existingAttendance = existingAttendances.stream()
+                    .filter(a -> a.getStudent().getId().equals(student.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (existingAttendance != null) {
+                // Update
+                existingAttendance.setStatus(status);
+                existingAttendance.setNote(attRequest.getNote());
+                attendanceRepository.save(existingAttendance);
+            } else {
+                // Insert
+                Attendance newAttendance = Attendance.builder()
+                        .student(student)
+                        .classRoom(classRoom)
+                        .attendanceDate(request.getAttendanceDate())
+                        .period(request.getPeriod())
+                        .status(status)
+                        .note(attRequest.getNote())
+                        .build();
+                attendanceRepository.save(newAttendance);
+            }
+        }
     }
 
     // ==================== MAPPING HELPERS ====================

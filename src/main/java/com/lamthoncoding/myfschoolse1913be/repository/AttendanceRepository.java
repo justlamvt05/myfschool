@@ -16,6 +16,10 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
             Long classId, LocalDate attendanceDate
     );
 
+    List<Attendance> findByClassRoomIdAndAttendanceDateAndPeriod(
+            Long classId, LocalDate attendanceDate, Integer period
+    );
+
     @Query("""
     SELECT a
     FROM Attendance a
