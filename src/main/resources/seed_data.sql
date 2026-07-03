@@ -59,14 +59,19 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
--- 6. Subjects (6 môn)
+-- 6. Subjects (11 môn)
 INSERT INTO subjects (id, subject_code, subject_name, created_at, updated_at) VALUES
-    (1, 'TOAN',  'Toán',       NOW(), NOW()),
-    (2, 'VAN',   'Ngữ Văn',    NOW(), NOW()),
-    (3, 'ANH',   'Tiếng Anh',  NOW(), NOW()),
-    (4, 'LY',    'Vật Lý',     NOW(), NOW()),
-    (5, 'HOA',   'Hóa Học',    NOW(), NOW()),
-    (6, 'SINH',  'Sinh Học',   NOW(), NOW())
+    (1,  'TOAN',    'Toán',           NOW(), NOW()),
+    (2,  'VAN',     'Ngữ Văn',        NOW(), NOW()),
+    (3,  'ANH',     'Tiếng Anh',      NOW(), NOW()),
+    (4,  'LY',      'Vật Lý',         NOW(), NOW()),
+    (5,  'HOA',     'Hóa Học',        NOW(), NOW()),
+    (6,  'SINH',    'Sinh Học',       NOW(), NOW()),
+    (7,  'SU',      'Lịch Sử',       NOW(), NOW()),
+    (8,  'DIA',     'Địa Lý',        NOW(), NOW()),
+    (9,  'GDCD',    'Công Dân',       NOW(), NOW()),
+    (10, 'TDUC',    'Thể Dục',       NOW(), NOW()),
+    (11, 'GDQP',    'Giáo Dục Quốc Phòng', NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- 7. Semesters
@@ -76,44 +81,44 @@ INSERT INTO semesters (id, semester_name, school_year, created_at, updated_at) V
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
--- 8. Schedules – Lịch học lớp 12A1
+-- 8. Schedules – Lịch học lớp 12A1 (11 môn)
 --    day_of_week: 0=MONDAY, 1=TUESDAY, ... 5=SATURDAY
 -- ============================================================
 INSERT INTO schedules (id, class_room_id, subject_id, day_of_week, period_start, period_end, room, created_at, updated_at) VALUES
-    -- Thứ 2 (MONDAY = 0)
-    (1,  1, 1, 0, 1, 2, 'P.201', NOW(), NOW()),   -- Toán tiết 1-2
-    (2,  1, 2, 0, 3, 4, 'P.201', NOW(), NOW()),   -- Ngữ Văn tiết 3-4
-    (3,  1, 3, 0, 5, 5, 'P.301', NOW(), NOW()),   -- Tiếng Anh tiết 5
+    -- Thứ 2 (MONDAY = 0) - 5 tiết
+    (1,  1, 1,  0, 1, 2, 'P.201',  NOW(), NOW()),   -- Toán tiết 1-2
+    (2,  1, 2,  0, 3, 4, 'P.202',  NOW(), NOW()),   -- Ngữ Văn tiết 3-4
+    (3,  1, 3,  0, 5, 5, 'P.301',  NOW(), NOW()),   -- Tiếng Anh tiết 5
 
-    -- Thứ 3 (TUESDAY = 1)
-    (4,  1, 4, 1, 1, 2, 'P.Lab1', NOW(), NOW()),  -- Vật Lý tiết 1-2
-    (5,  1, 5, 1, 3, 4, 'P.Lab2', NOW(), NOW()),  -- Hóa Học tiết 3-4
-    (6,  1, 6, 1, 5, 5, 'P.Lab3', NOW(), NOW()),  -- Sinh Học tiết 5
+    -- Thứ 3 (TUESDAY = 1) - 5 tiết
+    (4,  1, 4,  1, 1, 2, 'P.Lab1', NOW(), NOW()),   -- Vật Lý tiết 1-2
+    (5,  1, 5,  1, 3, 4, 'P.Lab2', NOW(), NOW()),   -- Hóa Học tiết 3-4
+    (6,  1, 6,  1, 5, 5, 'P.Lab3', NOW(), NOW()),   -- Sinh Học tiết 5
 
-    -- Thứ 4 (WEDNESDAY = 2)
-    (7,  1, 1, 2, 1, 2, 'P.201', NOW(), NOW()),   -- Toán tiết 1-2
-    (8,  1, 3, 2, 3, 4, 'P.301', NOW(), NOW()),   -- Tiếng Anh tiết 3-4
-    (9,  1, 2, 2, 5, 5, 'P.201', NOW(), NOW()),   -- Ngữ Văn tiết 5
+    -- Thứ 4 (WEDNESDAY = 2) - 5 tiết
+    (7,  1, 7,  2, 1, 2, 'P.203',  NOW(), NOW()),   -- Lịch Sử tiết 1-2
+    (8,  1, 8,  2, 3, 4, 'P.204',  NOW(), NOW()),   -- Địa Lý tiết 3-4
+    (9,  1, 9,  2, 5, 5, 'P.205',  NOW(), NOW()),   -- Công Dân tiết 5
 
-    -- Thứ 5 (THURSDAY = 3)
-    (10, 1, 5, 3, 1, 2, 'P.Lab2', NOW(), NOW()),  -- Hóa Học tiết 1-2
-    (11, 1, 4, 3, 3, 4, 'P.Lab1', NOW(), NOW()),  -- Vật Lý tiết 3-4
-    (12, 1, 6, 3, 5, 5, 'P.Lab3', NOW(), NOW()),  -- Sinh Học tiết 5
+    -- Thứ 5 (THURSDAY = 3) - 5 tiết
+    (10, 1, 1,  3, 1, 2, 'P.201',  NOW(), NOW()),   -- Toán tiết 1-2
+    (11, 1, 3,  3, 3, 4, 'P.301',  NOW(), NOW()),   -- Tiếng Anh tiết 3-4
+    (12, 1, 2,  3, 5, 5, 'P.202',  NOW(), NOW()),   -- Ngữ Văn tiết 5
 
-    -- Thứ 6 (FRIDAY = 4)
-    (13, 1, 1, 4, 1, 2, 'P.201', NOW(), NOW()),   -- Toán tiết 1-2
-    (14, 1, 2, 4, 3, 4, 'P.201', NOW(), NOW()),   -- Ngữ Văn tiết 3-4
-    (15, 1, 3, 4, 5, 5, 'P.301', NOW(), NOW()),   -- Tiếng Anh tiết 5
+    -- Thứ 6 (FRIDAY = 4) - 5 tiết
+    (13, 1, 5,  4, 1, 2, 'P.Lab2', NOW(), NOW()),   -- Hóa Học tiết 1-2
+    (14, 1, 4,  4, 3, 4, 'P.Lab1', NOW(), NOW()),   -- Vật Lý tiết 3-4
+    (15, 1, 6,  4, 5, 5, 'P.Lab3', NOW(), NOW()),   -- Sinh Học tiết 5
 
-    -- Thứ 7 (SATURDAY = 5)
-    (16, 1, 4, 5, 1, 2, 'P.Lab1', NOW(), NOW()),  -- Vật Lý tiết 1-2
-    (17, 1, 5, 5, 3, 3, 'P.Lab2', NOW(), NOW()),  -- Hóa Học tiết 3
-    (18, 1, 6, 5, 4, 5, 'P.Lab3', NOW(), NOW())   -- Sinh Học tiết 4-5
+    -- Thứ 7 (SATURDAY = 5) - 5 tiết
+    (16, 1, 10, 5, 1, 2, 'SVĐ',    NOW(), NOW()),   -- Thể Dục tiết 1-2
+    (17, 1, 11, 5, 3, 4, 'P.GDQP', NOW(), NOW()),   -- GDQP tiết 3-4
+    (18, 1, 9,  5, 5, 5, 'P.205',  NOW(), NOW())    -- Công Dân tiết 5
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
 -- 9. Grades – Bảng điểm học sinh Nguyễn Văn A
---    Học kỳ 1 + Học kỳ 2, mỗi kỳ 6 môn
+--    Học kỳ 1 + Học kỳ 2, mỗi kỳ 6 môn chính
 -- ============================================================
 INSERT INTO grades (id, student_id, subject_id, semester_id, oral_score, score15_min, score1_period, final_exam, average_score, created_at, updated_at) VALUES
     -- ===== HỌC KỲ 1 =====
@@ -336,76 +341,179 @@ UPDATE schedules SET teacher_id = 1 WHERE subject_id = 1;  -- Toán → GV Toán
 UPDATE schedules SET teacher_id = 2 WHERE subject_id = 4;  -- Vật Lý → GV Lý
 
 -- ============================================================
--- 19. Attendances (Điểm danh) – giữ nguyên từ trước
+-- 19. Attendances (Điểm danh)
+--     Lịch học hè: cuối tháng 6/2026 → tháng 9/2026
+--     Hôm nay: 2026-07-02
+--     Các ngày đã qua: có trạng thái điểm danh thực tế
+--     Các ngày chưa đến: KHÔNG insert (chưa điểm danh)
 -- ============================================================
 INSERT INTO attendances (id, student_id, class_room_id, attendance_date, period, status, note, created_at, updated_at) VALUES
-    -- Học sinh 1 (Nguyễn Văn A) - Ngày 2025-09-08 (Thứ 2)
-    (1, 1, 1, '2025-09-08', 1, 'PRESENT', NULL, NOW(), NOW()),
-    (2, 1, 1, '2025-09-08', 2, 'PRESENT', NULL, NOW(), NOW()),
-    (3, 1, 1, '2025-09-08', 3, 'PRESENT', NULL, NOW(), NOW()),
-    (4, 1, 1, '2025-09-08', 4, 'PRESENT', NULL, NOW(), NOW()),
-    (5, 1, 1, '2025-09-08', 5, 'PRESENT', NULL, NOW(), NOW()),
+    -- ===== TUẦN 1: 22/06/2026 - 27/06/2026 =====
+    -- 22/06 (Thứ 2) - Toán(1-2), Văn(3-4), Anh(5)
+    (1,  1, 1, '2026-06-22', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (2,  1, 1, '2026-06-22', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (3,  1, 1, '2026-06-22', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (4,  1, 1, '2026-06-22', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (5,  1, 1, '2026-06-22', 5, 'PRESENT', NULL, NOW(), NOW()),
+    (6,  2, 1, '2026-06-22', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (7,  2, 1, '2026-06-22', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (8,  2, 1, '2026-06-22', 3, 'LATE', 'Đi trễ 10 phút', NOW(), NOW()),
+    (9,  2, 1, '2026-06-22', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (10, 2, 1, '2026-06-22', 5, 'PRESENT', NULL, NOW(), NOW()),
 
-    -- Học sinh 2 (Trần Thị B) - Ngày 2025-09-08 (Thứ 2)
-    (6, 2, 1, '2025-09-08', 1, 'LATE', 'Đi trễ 15 phút', NOW(), NOW()),
-    (7, 2, 1, '2025-09-08', 2, 'PRESENT', NULL, NOW(), NOW()),
-    (8, 2, 1, '2025-09-08', 3, 'PRESENT', NULL, NOW(), NOW()),
-    (9, 2, 1, '2025-09-08', 4, 'ABSENT_WITH_PERMISSION', 'Xin phép khám bệnh', NOW(), NOW()),
-    (10, 2, 1, '2025-09-08', 5, 'ABSENT_WITH_PERMISSION', 'Xin phép khám bệnh', NOW(), NOW()),
+    -- 23/06 (Thứ 3) - Lý(1-2), Hóa(3-4), Sinh(5)
+    (11, 1, 1, '2026-06-23', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (12, 1, 1, '2026-06-23', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (13, 1, 1, '2026-06-23', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (14, 1, 1, '2026-06-23', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (15, 1, 1, '2026-06-23', 5, 'PRESENT', NULL, NOW(), NOW()),
+    (16, 2, 1, '2026-06-23', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (17, 2, 1, '2026-06-23', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (18, 2, 1, '2026-06-23', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (19, 2, 1, '2026-06-23', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (20, 2, 1, '2026-06-23', 5, 'ABSENT_WITH_PERMISSION', 'Xin phép về sớm', NOW(), NOW()),
 
-    -- Học sinh 1 (Nguyễn Văn A) - Ngày 2025-09-09 (Thứ 3)
-    (11, 1, 1, '2025-09-09', 1, 'PRESENT', NULL, NOW(), NOW()),
-    (12, 1, 1, '2025-09-09', 2, 'PRESENT', NULL, NOW(), NOW()),
-    (13, 1, 1, '2025-09-09', 3, 'PRESENT', NULL, NOW(), NOW()),
-    (14, 1, 1, '2025-09-09', 4, 'PRESENT', NULL, NOW(), NOW()),
-    (15, 1, 1, '2025-09-09', 5, 'PRESENT', NULL, NOW(), NOW()),
+    -- 24/06 (Thứ 4) - Sử(1-2), Địa(3-4), GDCD(5)
+    (21, 1, 1, '2026-06-24', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (22, 1, 1, '2026-06-24', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (23, 1, 1, '2026-06-24', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (24, 1, 1, '2026-06-24', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (25, 1, 1, '2026-06-24', 5, 'LATE', 'Đi trễ 5 phút', NOW(), NOW()),
+    (26, 2, 1, '2026-06-24', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (27, 2, 1, '2026-06-24', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (28, 2, 1, '2026-06-24', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (29, 2, 1, '2026-06-24', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (30, 2, 1, '2026-06-24', 5, 'PRESENT', NULL, NOW(), NOW()),
 
-    -- Học sinh 2 (Trần Thị B) - Ngày 2025-09-09 (Thứ 3)
-    (16, 2, 1, '2025-09-09', 1, 'PRESENT', NULL, NOW(), NOW()),
-    (17, 2, 1, '2025-09-09', 2, 'PRESENT', NULL, NOW(), NOW()),
-    (18, 2, 1, '2025-09-09', 3, 'PRESENT', NULL, NOW(), NOW()),
-    (19, 2, 1, '2025-09-09', 4, 'PRESENT', NULL, NOW(), NOW()),
-    (20, 2, 1, '2025-09-09', 5, 'PRESENT', NULL, NOW(), NOW())
+    -- 25/06 (Thứ 5) - Toán(1-2), Anh(3-4), Văn(5)
+    (31, 1, 1, '2026-06-25', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (32, 1, 1, '2026-06-25', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (33, 1, 1, '2026-06-25', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (34, 1, 1, '2026-06-25', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (35, 1, 1, '2026-06-25', 5, 'PRESENT', NULL, NOW(), NOW()),
+    (36, 2, 1, '2026-06-25', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (37, 2, 1, '2026-06-25', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (38, 2, 1, '2026-06-25', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (39, 2, 1, '2026-06-25', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (40, 2, 1, '2026-06-25', 5, 'PRESENT', NULL, NOW(), NOW()),
+
+    -- 26/06 (Thứ 6) - Hóa(1-2), Lý(3-4), Sinh(5)
+    (41, 1, 1, '2026-06-26', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (42, 1, 1, '2026-06-26', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (43, 1, 1, '2026-06-26', 3, 'ABSENT_WITHOUT_PERMISSION', 'Nghỉ không phép', NOW(), NOW()),
+    (44, 1, 1, '2026-06-26', 4, 'ABSENT_WITHOUT_PERMISSION', 'Nghỉ không phép', NOW(), NOW()),
+    (45, 1, 1, '2026-06-26', 5, 'ABSENT_WITHOUT_PERMISSION', 'Nghỉ không phép', NOW(), NOW()),
+    (46, 2, 1, '2026-06-26', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (47, 2, 1, '2026-06-26', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (48, 2, 1, '2026-06-26', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (49, 2, 1, '2026-06-26', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (50, 2, 1, '2026-06-26', 5, 'PRESENT', NULL, NOW(), NOW()),
+
+    -- 27/06 (Thứ 7) - Thể dục(1-2), GDQP(3-4), GDCD(5)
+    (51, 1, 1, '2026-06-27', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (52, 1, 1, '2026-06-27', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (53, 1, 1, '2026-06-27', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (54, 1, 1, '2026-06-27', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (55, 1, 1, '2026-06-27', 5, 'PRESENT', NULL, NOW(), NOW()),
+    (56, 2, 1, '2026-06-27', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (57, 2, 1, '2026-06-27', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (58, 2, 1, '2026-06-27', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (59, 2, 1, '2026-06-27', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (60, 2, 1, '2026-06-27', 5, 'PRESENT', NULL, NOW(), NOW()),
+
+    -- ===== TUẦN 2: 29/06/2026 - 04/07/2026 =====
+    -- 29/06 (Thứ 2) - Toán(1-2), Văn(3-4), Anh(5)
+    (61, 1, 1, '2026-06-29', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (62, 1, 1, '2026-06-29', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (63, 1, 1, '2026-06-29', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (64, 1, 1, '2026-06-29', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (65, 1, 1, '2026-06-29', 5, 'PRESENT', NULL, NOW(), NOW()),
+    (66, 2, 1, '2026-06-29', 1, 'LATE', 'Đi trễ 15 phút', NOW(), NOW()),
+    (67, 2, 1, '2026-06-29', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (68, 2, 1, '2026-06-29', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (69, 2, 1, '2026-06-29', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (70, 2, 1, '2026-06-29', 5, 'PRESENT', NULL, NOW(), NOW()),
+
+    -- 30/06 (Thứ 3) - Lý(1-2), Hóa(3-4), Sinh(5)
+    (71, 1, 1, '2026-06-30', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (72, 1, 1, '2026-06-30', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (73, 1, 1, '2026-06-30', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (74, 1, 1, '2026-06-30', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (75, 1, 1, '2026-06-30', 5, 'PRESENT', NULL, NOW(), NOW()),
+    (76, 2, 1, '2026-06-30', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (77, 2, 1, '2026-06-30', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (78, 2, 1, '2026-06-30', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (79, 2, 1, '2026-06-30', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (80, 2, 1, '2026-06-30', 5, 'PRESENT', NULL, NOW(), NOW()),
+
+    -- 01/07 (Thứ 4) - Sử(1-2), Địa(3-4), GDCD(5)
+    (81, 1, 1, '2026-07-01', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (82, 1, 1, '2026-07-01', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (83, 1, 1, '2026-07-01', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (84, 1, 1, '2026-07-01', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (85, 1, 1, '2026-07-01', 5, 'PRESENT', NULL, NOW(), NOW()),
+    (86, 2, 1, '2026-07-01', 1, 'ABSENT_WITH_PERMISSION', 'Xin phép khám bệnh', NOW(), NOW()),
+    (87, 2, 1, '2026-07-01', 2, 'ABSENT_WITH_PERMISSION', 'Xin phép khám bệnh', NOW(), NOW()),
+    (88, 2, 1, '2026-07-01', 3, 'ABSENT_WITH_PERMISSION', 'Xin phép khám bệnh', NOW(), NOW()),
+    (89, 2, 1, '2026-07-01', 4, 'ABSENT_WITH_PERMISSION', 'Xin phép khám bệnh', NOW(), NOW()),
+    (90, 2, 1, '2026-07-01', 5, 'ABSENT_WITH_PERMISSION', 'Xin phép khám bệnh', NOW(), NOW()),
+
+    -- 02/07 (Thứ 5 - HÔM NAY) - Toán(1-2), Anh(3-4), Văn(5)
+    (91, 1, 1, '2026-07-02', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (92, 1, 1, '2026-07-02', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (93, 1, 1, '2026-07-02', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (94, 1, 1, '2026-07-02', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (95, 1, 1, '2026-07-02', 5, 'PRESENT', NULL, NOW(), NOW()),
+    (96, 2, 1, '2026-07-02', 1, 'PRESENT', NULL, NOW(), NOW()),
+    (97, 2, 1, '2026-07-02', 2, 'PRESENT', NULL, NOW(), NOW()),
+    (98, 2, 1, '2026-07-02', 3, 'PRESENT', NULL, NOW(), NOW()),
+    (99, 2, 1, '2026-07-02', 4, 'PRESENT', NULL, NOW(), NOW()),
+    (100,2, 1, '2026-07-02', 5, 'PRESENT', NULL, NOW(), NOW())
+
+    -- ===== TỪ 03/07/2026 TRỞ ĐI: CHƯA ĐẾN → KHÔNG INSERT ATTENDANCE =====
+    -- Lịch học vẫn tiếp tục theo schedule đến hết tháng 9/2026
+    -- Khi ngày đó đến, giáo viên sẽ điểm danh qua hệ thống
+
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
--- 20. Events (Sự kiện)
+-- 20. Events (Sự kiện) – cập nhật cho hè 2026
 -- ============================================================
 INSERT INTO events (id, title, description, location, start_time, end_time, target_role, created_by, created_at, updated_at) VALUES
     (1,
-     'Họp hội đồng giáo viên đầu năm',
-     'Họp triển khai kế hoạch năm học 2025-2026. Tất cả giáo viên bắt buộc tham gia.',
+     'Khai giảng khóa học hè 2026',
+     'Lễ khai giảng chương trình học hè 2026. Toàn bộ học sinh tham gia.',
      'Hội trường A',
-     '2025-09-01 08:00:00', '2025-09-01 11:00:00',
-     'TEACHER', 3, NOW(), NOW()),
+     '2026-06-22 07:30:00', '2026-06-22 09:00:00',
+     'ALL', 3, NOW(), NOW()),
 
     (2,
-     'Lễ khai giảng năm học 2025-2026',
-     'Lễ khai giảng long trọng chào đón năm học mới. Toàn trường tham gia.',
-     'Sân trường',
-     '2025-09-05 07:00:00', '2025-09-05 10:00:00',
+     'Ngày hội thể thao hè',
+     'Ngày hội thể dục thể thao hè, các lớp cử đại diện tham gia.',
+     'Sân vận động trường',
+     '2026-07-18 07:00:00', '2026-07-18 17:00:00',
      'ALL', 3, NOW(), NOW()),
 
     (3,
-     'Ngày hội thể thao',
-     'Ngày hội thể dục thể thao cấp trường, các lớp cử đại diện tham gia.',
-     'Sân vận động trường',
-     '2025-11-20 07:00:00', '2025-11-20 17:00:00',
-     'ALL', 3, NOW(), NOW()),
+     'Họp phụ huynh giữa hè',
+     'Giáo viên chủ nhiệm họp phụ huynh báo cáo tiến độ học hè.',
+     'Phòng học các lớp',
+     '2026-08-01 14:00:00', '2026-08-01 17:00:00',
+     'TEACHER', 3, NOW(), NOW()),
 
     (4,
-     'Thi học kỳ 1',
-     'Lịch thi cuối học kỳ 1 cho tất cả các lớp.',
+     'Thi cuối khóa hè',
+     'Lịch thi cuối chương trình học hè cho tất cả các lớp.',
      'Các phòng thi',
-     '2025-12-15 07:00:00', '2025-12-20 17:00:00',
+     '2026-09-15 07:00:00', '2026-09-20 17:00:00',
      'ALL', 3, NOW(), NOW()),
 
     (5,
-     'Họp phụ huynh học kỳ 1',
-     'Giáo viên chủ nhiệm họp phụ huynh báo cáo kết quả học kỳ 1.',
-     'Phòng học các lớp',
-     '2026-01-10 14:00:00', '2026-01-10 17:00:00',
-     'TEACHER', 3, NOW(), NOW())
+     'Lễ bế giảng khóa hè 2026',
+     'Lễ bế giảng và tổng kết chương trình học hè 2026.',
+     'Hội trường A',
+     '2026-09-27 08:00:00', '2026-09-27 11:00:00',
+     'ALL', 3, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================

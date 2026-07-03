@@ -5,5 +5,6 @@ public enum AttendanceStatus {
     ABSENT_WITH_PERMISSION,
     ABSENT_WITHOUT_PERMISSION,
     LATE,
-    EARLY_LEAVE
+    EARLY_LEAVE,
+    NOT_YET
 }
