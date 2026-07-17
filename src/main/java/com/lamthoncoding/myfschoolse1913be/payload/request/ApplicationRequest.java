@@ -27,4 +27,6 @@ public class ApplicationRequest {
     private String reason;
 
     private String attachmentUrl;
+
+    private Long studentId; // Phụ huynh chỉ định con khi tạo đơn
 }

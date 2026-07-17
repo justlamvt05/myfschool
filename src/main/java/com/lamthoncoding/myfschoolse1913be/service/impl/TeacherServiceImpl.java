@@ -50,8 +50,8 @@ public class TeacherServiceImpl implements TeacherService {
     // ==================== LỊCH DẠY ====================
 
     private String getCurrentSchoolYear() {
-        int year = java.time.LocalDate.now().getYear();
-        int month = java.time.LocalDate.now().getMonthValue();
+        int year = LocalDate.now().getYear();
+        int month = LocalDate.now().getMonthValue();
         if (month >= 8) {
             return year + "-" + (year + 1);
         } else {

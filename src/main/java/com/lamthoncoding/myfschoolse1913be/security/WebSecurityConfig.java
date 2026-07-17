@@ -1,7 +1,5 @@
 package com.lamthoncoding.myfschoolse1913be.security;
 
-
-
 import com.lamthoncoding.myfschoolse1913be.security.config.auth.AuthEntryPointJwt;
 import com.lamthoncoding.myfschoolse1913be.security.config.auth.CustomAccessDenied;
 import com.lamthoncoding.myfschoolse1913be.security.config.jwt.AuthTokenFilter;
@@ -82,20 +80,16 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000",
-                "http://localhost:8081",
-                "http://localhost:5000",
-                "http://localhost:26033",
-                "http://localhost:36894",
-                "http://localhost:37774"));
-        config.setAllowedMethods(
-                List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-        );
+
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedMethods(List.of("*"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 

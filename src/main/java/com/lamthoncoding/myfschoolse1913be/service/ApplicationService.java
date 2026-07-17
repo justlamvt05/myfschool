@@ -18,7 +18,7 @@ public interface ApplicationService {
     ApplicationResponse getMyApplicationById(Long id, Long currentUserId);
 
     // Admin APIs
-    List<ApplicationResponse> getAllApplications(ApplicationStatus status, ApplicationType type);
+    org.springframework.data.domain.Page<ApplicationResponse> getAllApplications(String name, String phone, ApplicationStatus status, org.springframework.data.domain.Pageable pageable);
 
     ApplicationResponse getApplicationById(Long id);
 

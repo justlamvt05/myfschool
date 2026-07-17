@@ -470,6 +470,7 @@ INSERT INTO attendances (id, student_id, class_room_id, attendance_date, period,
     (99, 2, 1, '2026-07-02', 4, 'PRESENT', NULL, NOW(), NOW()),
     (100,2, 1, '2026-07-02', 5, 'PRESENT', NULL, NOW(), NOW())
 
+
     -- ===== TỪ 03/07/2026 TRỞ ĐI: CHƯA ĐẾN → KHÔNG INSERT ATTENDANCE =====
     -- Lịch học vẫn tiếp tục theo schedule đến hết tháng 9/2026
     -- Khi ngày đó đến, giáo viên sẽ điểm danh qua hệ thống
@@ -566,3 +567,134 @@ VALUES (
            true
        )
     ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+-- 21. Bổ sung dữ liệu theo yêu cầu: Lớp 11D1, Giáo viên Văn, Học sinh
+-- ============================================================
+
+-- Thêm lớp 11D1
+INSERT INTO class_rooms (id, class_name, school_year, created_at, updated_at)
+VALUES (2, '11D1', '2025-2026', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- Thêm user cho Giáo viên Văn
+INSERT INTO tbl_users (id, username, email, password, full_name, phone, status, created_at, updated_at)
+VALUES (
+    6,
+    'lethivan',
+    'lethivan@myfschool.vn',
+    '$2a$10$KU1x/wB.Z9Amz3RDUW/v0eSCl2i2N4ILVUnOHV8WJUgBsKpJsIUD2',
+    'Lê Thị Văn',
+    '0903333333',
+    'ACTIVE',
+    NOW(),
+    NOW()
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Phân quyền cho Giáo viên Văn
+INSERT INTO user_roles (user_id, role_id)
+VALUES (6, 3)
+ON CONFLICT DO NOTHING;
+
+-- Thêm giáo viên Văn và gán chủ nhiệm lớp 11D1
+INSERT INTO teachers (id, teacher_code, user_id, homeroom_class_id, subject_id, created_at, updated_at)
+VALUES (
+    3,
+    'GV2025003',
+    6,
+    2,     -- chủ nhiệm lớp 11D1
+    2,     -- môn Ngữ Văn (subject_id = 2)
+    NOW(),
+    NOW()
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Cập nhật lớp 11D1 -> homeroom_teacher_id = 3
+UPDATE class_rooms SET homeroom_teacher_id = 3 WHERE id = 2;
+
+-- Gán giáo viên Văn dạy môn Văn cho lớp 12A1 đã có
+UPDATE schedules SET teacher_id = 3 WHERE class_room_id = 1 AND subject_id = 2;
+
+-- Thêm user cho Học sinh 1 (lớp 11D1)
+INSERT INTO tbl_users (id, username, email, password, full_name, phone, status, created_at, updated_at)
+VALUES (
+    7,
+    'hoangvanc',
+    'hoangvanc@gmail.com',
+    '$2a$10$KU1x/wB.Z9Amz3RDUW/v0eSCl2i2N4ILVUnOHV8WJUgBsKpJsIUD2',
+    'Hoàng Văn C',
+    '0921111111',
+    'ACTIVE',
+    NOW(),
+    NOW()
+)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_roles (user_id, role_id)
+VALUES (7, 1)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO students (id, student_code, date_of_birth, gender, address, user_id, class_room_id, created_at, updated_at)
+VALUES (
+    3,
+    'HS2025003',
+    '2008-01-10',
+    'Nam',
+    '111 Quận 5, TP.HCM',
+    7,
+    2,
+    NOW(),
+    NOW()
+)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO student_classrooms (id, student_id, class_room_id, join_date, status, created_at, updated_at)
+VALUES (3, 3, 2, '2025-08-15', 'CURRENT', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- Thêm user cho Học sinh 2 (lớp 11D1)
+INSERT INTO tbl_users (id, username, email, password, full_name, phone, status, created_at, updated_at)
+VALUES (
+    8,
+    'phamthid',
+    'phamthid@gmail.com',
+    '$2a$10$KU1x/wB.Z9Amz3RDUW/v0eSCl2i2N4ILVUnOHV8WJUgBsKpJsIUD2',
+    'Phạm Thị D',
+    '0922222222',
+    'ACTIVE',
+    NOW(),
+    NOW()
+)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_roles (user_id, role_id)
+VALUES (8, 1)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO students (id, student_code, date_of_birth, gender, address, user_id, class_room_id, created_at, updated_at)
+VALUES (
+    4,
+    'HS2025004',
+    '2008-02-20',
+    'Nữ',
+    '222 Quận 6, TP.HCM',
+    8,
+    2,
+    NOW(),
+    NOW()
+)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO student_classrooms (id, student_id, class_room_id, join_date, status, created_at, updated_at)
+VALUES (4, 4, 2, '2025-08-15', 'CURRENT', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- Bổ sung lịch học cho lớp 11D1: môn Văn và môn Lý
+INSERT INTO schedules (id, class_room_id, subject_id, day_of_week, period_start, period_end, room, created_at, updated_at) VALUES
+    (19, 2, 2, 0, 1, 2, 'P.11D1', NOW(), NOW()),   -- Ngữ Văn thứ 2
+    (20, 2, 4, 0, 3, 4, 'P.Lab1', NOW(), NOW())    -- Vật Lý thứ 2
+ON CONFLICT (id) DO NOTHING;
+
+UPDATE schedules SET teacher_id = 3 WHERE id = 19; -- Lê Thị Văn dạy Văn
+UPDATE schedules SET teacher_id = 2 WHERE id = 20; -- Trần Văn Lý dạy Lý

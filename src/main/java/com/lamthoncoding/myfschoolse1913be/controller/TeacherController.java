@@ -4,6 +4,7 @@ import com.lamthoncoding.myfschoolse1913be.payload.request.TeacherApplicationReq
 import com.lamthoncoding.myfschoolse1913be.payload.request.TeacherGradeRequest;
 import com.lamthoncoding.myfschoolse1913be.payload.response.ApiResponse;
 import com.lamthoncoding.myfschoolse1913be.security.service.UserDetailsImpl;
+import com.lamthoncoding.myfschoolse1913be.service.GradeExcelService;
 import com.lamthoncoding.myfschoolse1913be.service.TeacherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.time.LocalDate;
 public class TeacherController {
 
     private final TeacherService teacherService;
+    private final GradeExcelService gradeExcelService;
 
     // ==================== LỊCH DẠY ====================
 
@@ -215,5 +217,44 @@ public class TeacherController {
 
         teacherService.takeAttendance(userDetails.getUserId(), request);
         return ApiResponse.success("Attendance saved successfully");
+    }
+
+    // ==================== EXCEL ĐIỂM ====================
+
+
+    @PostMapping("/grades/import")
+    public ApiResponse<?> importGrades(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam("classId") Long classId,
+            @RequestParam("semesterId") Long semesterId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        
+        return ApiResponse.success(
+                gradeExcelService.importGrades(file, classId, semesterId, userDetails.getUserId()));
+    }
+
+    @GetMapping("/grades/export")
+    public org.springframework.http.ResponseEntity<byte[]> exportSubjectGrades(
+            @RequestParam("classId") Long classId,
+            @RequestParam("semesterId") Long semesterId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            
+        byte[] excelData = gradeExcelService.exportSubjectGrades(classId, semesterId, userDetails.getUserId());
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"bang_diem.xlsx\"")
+                .contentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excelData);
+    }
+
+    @GetMapping("/homeroom/grades/export")
+    public org.springframework.http.ResponseEntity<byte[]> exportHomeroomGrades(
+            @RequestParam("semesterId") Long semesterId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            
+        byte[] excelData = gradeExcelService.exportHomeroomGrades(semesterId, userDetails.getUserId());
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"bang_diem_lop_chu_nhiem.xlsx\"")
+                .contentType(org.springframework.http.MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excelData);
     }
 }

@@ -45,6 +45,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
     WHERE u.status = 'INACTIVE'
     """)
     void deleteInactiveUsers();
+
+    @Query("""
+    SELECT u FROM User u
+    WHERE (CAST(:fullName AS string) IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', CAST(:fullName AS string), '%')))
+    AND (CAST(:phone AS string) IS NULL OR u.phone LIKE CONCAT('%', CAST(:phone AS string), '%'))
+    """)
+    org.springframework.data.domain.Page<User> findUsersByFilters(
+            @Param("fullName") String fullName,
+            @Param("phone") String phone,
+            Pageable pageable
+    );
 }
 
 

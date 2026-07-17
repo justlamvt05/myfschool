@@ -1,7 +1,6 @@
 package com.lamthoncoding.myfschoolse1913be.service.impl;
 
 import com.lamthoncoding.myfschoolse1913be.contraints.ApplicationStatus;
-import com.lamthoncoding.myfschoolse1913be.contraints.ApplicationType;
 import com.lamthoncoding.myfschoolse1913be.entity.*;
 import com.lamthoncoding.myfschoolse1913be.exception.handlers.AccessDeniedException;
 import com.lamthoncoding.myfschoolse1913be.exception.handlers.ApplicationAlreadyReviewedException;
@@ -14,6 +13,8 @@ import com.lamthoncoding.myfschoolse1913be.repository.*;
 import com.lamthoncoding.myfschoolse1913be.service.ApplicationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +33,9 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final TeacherRepository teacherRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
+    private final ParentStudentRepository parentStudentRepository;
 
-    // ==================== STUDENT & TEACHER APIs ====================
+    // ==================== PARENT, STUDENT & TEACHER APIs ====================
 
     @Override
     @Transactional
@@ -52,13 +54,48 @@ public class ApplicationServiceImpl implements ApplicationService {
     private Application buildApplication(ApplicationRequest request, Long currentUserId) {
         Application.ApplicationBuilder builder = baseBuilder(request);
 
-        studentRepository.findByUserId(currentUserId)
-                .ifPresentOrElse(
-                        builder::student,
-                        () -> builder.teacher(getTeacher(currentUserId))
-                );
+        // 1. Kiểm tra nếu user là Parent → tạo đơn cho con
+        List<ParentStudent> parentStudents = parentStudentRepository.findByParent_User_Id(currentUserId);
+        if (!parentStudents.isEmpty()) {
+            Student student = resolveStudentForParent(parentStudents, request.getStudentId());
+            builder.student(student);
+            return builder.build();
+        }
 
+        // 2. Kiểm tra nếu user là Student → tạo đơn cho chính mình
+        Optional<Student> studentOpt = studentRepository.findByUserId(currentUserId);
+        if (studentOpt.isPresent()) {
+            builder.student(studentOpt.get());
+            return builder.build();
+        }
+
+        // 3. Nếu là Teacher → tạo đơn cho giáo viên
+        builder.teacher(getTeacher(currentUserId));
         return builder.build();
+    }
+
+    /**
+     * Xác định Student cho phụ huynh tạo đơn.
+     * - Nếu chỉ có 1 con → auto-chọn.
+     * - Nếu nhiều con và có studentId → validate và chọn.
+     * - Nếu nhiều con mà không có studentId → throw lỗi.
+     */
+    private Student resolveStudentForParent(List<ParentStudent> parentStudents, Long studentId) {
+        if (parentStudents.size() == 1) {
+            // Chỉ có 1 con → auto-chọn
+            return parentStudents.get(0).getStudent();
+        }
+
+        // Nhiều con → yêu cầu chọn studentId
+        if (studentId == null) {
+            throw new InvalidInputException("Phụ huynh có nhiều con, vui lòng chọn học sinh cần tạo đơn");
+        }
+
+        return parentStudents.stream()
+                .filter(ps -> ps.getStudent().getId().equals(studentId))
+                .findFirst()
+                .map(ParentStudent::getStudent)
+                .orElseThrow(() -> new AccessDeniedException("Học sinh không thuộc quyền quản lý của phụ huynh"));
     }
 
     private Application.ApplicationBuilder baseBuilder(ApplicationRequest request) {
@@ -92,7 +129,20 @@ public class ApplicationServiceImpl implements ApplicationService {
     public List<ApplicationResponse> getMyApplications(Long currentUserId) {
         log.info("UserId={} fetching their applications", currentUserId);
 
-        // Ưu tiên kiểm tra Student trước, nếu không thì Teacher
+        // 1. Kiểm tra nếu user là Parent → lấy đơn của tất cả con
+        List<ParentStudent> parentStudents = parentStudentRepository.findByParent_User_Id(currentUserId);
+        if (!parentStudents.isEmpty()) {
+            List<Long> childStudentIds = parentStudents.stream()
+                    .map(ps -> ps.getStudent().getId())
+                    .toList();
+
+            return applicationRepository.findByStudentIdInOrderByCreatedAtDesc(childStudentIds)
+                    .stream()
+                    .map(this::toResponse)
+                    .toList();
+        }
+
+        // 2. Kiểm tra nếu user là Student
         Optional<Student> studentOpt = studentRepository.findByUserId(currentUserId);
         if (studentOpt.isPresent()) {
             return applicationRepository.findByStudentIdOrderByCreatedAtDesc(studentOpt.get().getId())
@@ -101,6 +151,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                     .toList();
         }
 
+        // 3. Nếu là Teacher
         Teacher teacher = teacherRepository.findByUserId(currentUserId)
                 .orElseThrow(() -> new EntityNotFound("Không tìm thấy thông tin người dùng"));
 
@@ -114,6 +165,23 @@ public class ApplicationServiceImpl implements ApplicationService {
     public ApplicationResponse getMyApplicationById(Long id, Long currentUserId) {
         log.info("UserId={} fetching application id={}", currentUserId, id);
 
+        // 1. Kiểm tra nếu user là Parent → cho phép xem nếu đơn thuộc con mình
+        List<ParentStudent> parentStudents = parentStudentRepository.findByParent_User_Id(currentUserId);
+        if (!parentStudents.isEmpty()) {
+            List<Long> childStudentIds = parentStudents.stream()
+                    .map(ps -> ps.getStudent().getId())
+                    .toList();
+
+            Application application = applicationRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFound("Không tìm thấy đơn yêu cầu"));
+
+            if (application.getStudent() == null || !childStudentIds.contains(application.getStudent().getId())) {
+                throw new AccessDeniedException("Bạn không có quyền xem đơn này");
+            }
+            return toResponse(application);
+        }
+
+        // 2. Kiểm tra nếu user là Student
         Optional<Student> studentOpt = studentRepository.findByUserId(currentUserId);
         if (studentOpt.isPresent()) {
             Application application = applicationRepository
@@ -122,6 +190,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             return toResponse(application);
         }
 
+        // 3. Nếu là Teacher
         Teacher teacher = teacherRepository.findByUserId(currentUserId)
                 .orElseThrow(() -> new EntityNotFound("Không tìm thấy thông tin người dùng"));
 
@@ -135,24 +204,11 @@ public class ApplicationServiceImpl implements ApplicationService {
     // ==================== ADMIN APIs ====================
 
     @Override
-    public List<ApplicationResponse> getAllApplications(ApplicationStatus status, ApplicationType type) {
-        log.info("Admin fetching all applications, filter: status={}, type={}", status, type);
+    public Page<ApplicationResponse> getAllApplications(String name, String phone, ApplicationStatus status, Pageable pageable) {
+        log.info("Admin fetching all applications, filter: name={}, phone={}, status={}", name, phone, status);
 
-        List<Application> applications;
-
-        if (status != null && type != null) {
-            applications = applicationRepository.findByStatusAndTypeOrderByCreatedAtDesc(status, type);
-        } else if (status != null) {
-            applications = applicationRepository.findByStatusOrderByCreatedAtDesc(status);
-        } else if (type != null) {
-            applications = applicationRepository.findByTypeOrderByCreatedAtDesc(type);
-        } else {
-            applications = applicationRepository.findAllByOrderByCreatedAtDesc();
-        }
-
-        return applications.stream()
-                .map(this::toResponse)
-                .toList();
+        return applicationRepository.findApplicationsByFilters(name, phone, status, pageable)
+                .map(this::toResponse);
     }
 
     @Override
@@ -281,8 +337,8 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         return ApplicationResponse.builder()
                 .id(application.getId())
-                .studentId(applicantId)           // Giữ tên cũ hoặc đổi thành applicantId
-                .studentName(applicantName)        // Giữ tên cũ hoặc đổi thành applicantName
+                .studentId(applicantId)
+                .studentName(applicantName)
                 .type(application.getType())
                 .fromDate(application.getFromDate())
                 .toDate(application.getToDate())

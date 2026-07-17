@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -95,7 +97,7 @@ public class GradeServiceImpl implements GradeService {
                         .name(sc.getClassRoom().getClassName())
                         .schoolYear(sc.getClassRoom().getSchoolYear())
                         .build())
-                .collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
+                .collect(Collectors.toCollection(ArrayList::new));
 
         // If current class is not in history, add it
         if (student.getClassRoom() != null) {
